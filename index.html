@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador Guest - MG_2K</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <style>
+        body { background-color: #0a0a0a; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .container { background: #111; border: 2px solid #6a0dad; padding: 30px; border-radius: 15px; box-shadow: 0 0 20px #6a0dad; width: 350px; text-align: center; }
+        h2 { color: #a020f0; text-transform: uppercase; margin-bottom: 20px; }
+        input { width: 90%; padding: 12px; margin-bottom: 15px; background: #000; border: 1px solid #6a0dad; color: #fff; border-radius: 8px; text-align: center; }
+        .btn-gerar { background: #6a0dad; color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-gerar:hover { background: #a020f0; box-shadow: 0 0 15px #a020f0; }
+        #status { margin-top: 15px; font-size: 13px; color: #888; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>GERADOR DE CONTAS👻</h2>
+    <input type="password" id="accessKey" placeholder="DIGITE A KEY 🔑">
+    <button class="btn-gerar" onclick="generateFiles()">BAIXAR ARQUIVO ZIP📁</button>
+    <div id="status">COMEÇAR DOWNLOAD ✅.</div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBnHsXhrE7jcbNYplY3T9pF1WeeAl2XFaw",
+        authDomain: "mtpk-b1b28.firebaseapp.com",
+        databaseURL: "https://mtpk-b1b28-default-rtdb.firebaseio.com",
+        projectId: "mtpk-b1b28",
+        storageBucket: "mtpk-b1b28.firebasestorage.app",
+        messagingSenderId: "257842382429",
+        appId: "1:257842382429:web:5dc66ccdd9083d9a822fb4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.generateFiles = function() {
+        const key = document.getElementById('accessKey').value;
+        const status = document.getElementById('status');
+
+        if (key !== "777Jesus") {
+            alert("KEY INVÁLIDA!");
+            return;
+        }
+
+        status.innerText = "Buscando contas no banco...";
+        const dbRef = ref(db, 'contas_guest');
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                alert("Nenhuma conta encontrada no Firebase!");
+                status.innerText = "Erro: Banco vazio.";
+                return;
+            }
+
+            const zip = new JSZip();
+            status.innerText = "Criando arquivos...";
+
+            Object.keys(data).forEach((id) => {
+                const conta = data[id];
+                const folderName = `Conta_${conta.uid}`;
+                
+                // Conteúdo exato do arquivo .dat
+                const content = JSON.stringify({
+                    "guest_account_info": {
+                        "com.garena.msdk.guest_uid": String(conta.uid),
+                        "com.garena.msdk.guest_password": String(conta.password)
+                    }
+                });
+
+                // Cria pasta "Conta_UID" e coloca o arquivo Guest dentro
+                zip.folder(folderName).file("Guest100067.dat", content);
+            });
+
+            zip.generateAsync({type:"blob"}).then((blob) => {
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = "Contas_Geradas_MG.zip";
+                a.click();
+                status.innerText = "Download concluído!";
+            });
+        }, { onlyOnce: true });
+    }
+</script>
+</body>
+</html>
